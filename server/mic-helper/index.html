@@ -9,7 +9,8 @@
   <button id="allow" class="btn">Allow Microphone</button>
   <button id="mute" class="btn">Mute</button>
 
-  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script src="/lib/socket.io.min.js"></script>
+
   <script>
     const params = new URLSearchParams(window.location.search);
     const room = params.get('room') || 'room-default';

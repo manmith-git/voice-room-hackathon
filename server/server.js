@@ -8,6 +8,9 @@ const io = new Server(server, { cors: { origin: '*' } });
 const rooms = {}; // room -> Set(socketIds)
 const peersMeta = {}; // socketId -> { userId, displayName, role }
 const path = require('path');
+// Serve static files from 'lib' directory
+app.use('/lib', express.static(path.join(__dirname, 'lib')));
+
 
 // Serve web client
 app.use('/web-client', express.static(path.join(__dirname, 'web-client')));
