@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Mic Helper</title>
+<style>body{font-family:system-ui;padding:20px;background:#0b1220;color:#e6eef8} .btn{padding:10px;border-radius:8px;background:#0b66ff;color:white;border:none}</style>
+</head>
+<body>
+  <h1 id="title">Mic Input (for VS Code)</h1>
+  <p id="status">Status: idle</p>
+  <button id="allow" class="btn">Allow Microphone</button>
+  <button id="mute" class="btn">Mute</button>
+
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const room = params.get('room') || 'room-default';
+    const userId = params.get('userId') || ('user-'+Math.random().toString(36).slice(2,7));
+    const name = params.get('name') || 'VS Code User';
+    document.getElementById('title').textContent = 'Mic Input for VS Code — ' + name;
+    const SIGNALING = 'http://localhost:3000';
+    const socket = io(SIGNALING, { transports: ['websocket'] });
+    let localStream;
+    document.getElementById('allow').onclick = async () => {
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia({ audio:true });
+        document.getElementById('status').textContent = 'Mic allowed — connecting...';
+        socket.emit('join-room', { room, userId, displayName: name, role: 'mic-helper' });
+        // create PeerConnections by signaling offers/answers is handled in other clients
+        // For simplicity we're only emitting presence and relying on other peers to create connections.
+        // Advanced: implement full peer connections and add localStream tracks to them.
+      } catch (e) {
+        document.getElementById('status').textContent = 'Microphone access denied';
+        console.error(e);
+      }
+    };
+
+    document.getElementById('mute').onclick = () => {
+      if (localStream) {
+        const t = localStream.getAudioTracks()[0];
+        if (t) {
+          t.enabled = !t.enabled;
+          const muted = !t.enabled;
+          socket.emit('control', { room, type: 'mute', userId, value: muted });
+          document.getElementById('status').textContent = muted ? 'Muted' : 'Unmuted';
+        }
+      }
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Voice Room — Web Client</title>
+<style>body{font-family:system-ui;padding:12px;background:#f7fafc} .card{background:white;padding:12px;border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.06);margin-bottom:10px}</style>
+</head>
+<body>
+  <h2>Voice Room — Web Client</h2>
+  <div class="card">
+    <input id="name" placeholder="Your name" />
+    <input id="room" placeholder="room code" />
+    <button id="join">Join</button>
+    <button id="create">Create</button>
+    <button id="mute">Mute</button>
+  </div>
+  <div class="card" id="members">Members will appear here</div>
+
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script src="https://unpkg.com/yjs@13.5.47/dist/yjs.js"></script>
+  <script src="https://unpkg.com/y-webrtc@10.1.7/dist/y-webrtc.js"></script>
+  <script>
+    const SIGNALING = 'http://localhost:3000';
+    const socket = io(SIGNALING, { transports: ['websocket'] });
+    let localStream;
+    const userId = 'user-' + Math.random().toString(36).slice(2,9);
+    let provider, awareness;
+
+    async function startAudio(){
+      if (!localStream) {
+        localStream = await navigator.mediaDevices.getUserMedia({ audio:true });
+        // play remote audio? local preview omitted
+      }
+    }
+
+    document.getElementById('create').onclick = () => {
+      const room = Math.random().toString(36).slice(2,8);
+      document.getElementById('room').value = room;
+    };
+    document.getElementById('join').onclick = async () => {
+      const room = document.getElementById('room').value.trim();
+      const name = document.getElementById('name').value || 'Anon';
+      if (!room) return alert('enter room');
+      await startAudio();
+      socket.emit('join-room', { room, userId, displayName: name, role: 'browser' });
+
+      // Yjs provider
+      const ydoc = new Y.Doc();
+      provider = new Y.WebrtcProvider(room, ydoc, { signaling: [SIGNALING] });
+      awareness = provider.awareness;
+      awareness.setLocalState({ user: { userId, displayName: name, role:'browser', micMuted:false }});
+      awareness.on('update', () => {
+        const out = [];
+        awareness.getStates().forEach(s => s.user && out.push(s.user));
+        document.getElementById('members').innerText = JSON.stringify(out, null, 2);
+      });
+    };
+
+    document.getElementById('mute').onclick = () => {
+      if (localStream) {
+        const track = localStream.getAudioTracks()[0];
+        if (!track) return;
+        track.enabled = !track.enabled;
+        const muted = !track.enabled;
+        if (awareness) {
+          const st = awareness.getLocalState() || {};
+          awareness.setLocalStateField('user', { ...(st.user||{}), micMuted: muted });
+        }
+      }
+    };
+  </script>
+</body>
+</html>
