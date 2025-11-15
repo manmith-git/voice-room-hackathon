@@ -16,7 +16,7 @@
     const userId = params.get('userId') || ('user-'+Math.random().toString(36).slice(2,7));
     const name = params.get('name') || 'VS Code User';
     document.getElementById('title').textContent = 'Mic Input for VS Code — ' + name;
-    const SIGNALING = 'http://localhost:3000';
+    const SIGNALING = 'https://voice-room-hackathon.onrender.com';
     const socket = io(SIGNALING, { transports: ['websocket'] });
     let localStream;
     document.getElementById('allow').onclick = async () => {

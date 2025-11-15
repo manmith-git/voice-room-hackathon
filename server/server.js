@@ -7,6 +7,14 @@ const io = new Server(server, { cors: { origin: '*' } });
 
 const rooms = {}; // room -> Set(socketIds)
 const peersMeta = {}; // socketId -> { userId, displayName, role }
+const path = require('path');
+
+// Serve web client
+app.use('/web-client', express.static(path.join(__dirname, 'web-client')));
+
+// Serve mic helper
+app.use('/mic-helper', express.static(path.join(__dirname, 'mic-helper')));
+
 
 io.on('connection', socket => {
   console.log('socket connected', socket.id);

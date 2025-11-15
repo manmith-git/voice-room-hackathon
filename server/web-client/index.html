@@ -18,7 +18,7 @@
   <script src="https://unpkg.com/yjs@13.5.47/dist/yjs.js"></script>
   <script src="https://unpkg.com/y-webrtc@10.1.7/dist/y-webrtc.js"></script>
   <script>
-    const SIGNALING = 'http://localhost:3000';
+    const SIGNALING = 'https://voice-room-hackathon.onrender.com';
     const socket = io(SIGNALING, { transports: ['websocket'] });
     let localStream;
     const userId = 'user-' + Math.random().toString(36).slice(2,9);
